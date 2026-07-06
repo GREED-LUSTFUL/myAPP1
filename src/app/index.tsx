@@ -34,7 +34,9 @@ export default function HomeScreen() {
       <SafeAreaView style={styles.safeArea}>
         <ThemedView style={styles.heroSection}>
           <AnimatedIcon />
-         
+          <ThemedText type="title" style={styles.title}>
+            Welcome to&nbsp;idk what to do ong
+          </ThemedText>
         </ThemedView>
 
         <ThemedText type="code" style={styles.code}>
