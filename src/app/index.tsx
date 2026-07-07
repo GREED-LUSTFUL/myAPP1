@@ -1,4 +1,4 @@
-import { View, Text, Pressable, StyleSheet } from "react-native";
+import { Pressable, StyleSheet, Text, View } from "react-native";
 
 export default function HomeScreen() {
 
@@ -22,6 +22,7 @@ export default function HomeScreen() {
       justifyContent: "flex-start",
       gap: 20,
       marginTop: 20,
+      margin: "auto",
     },
     
     box: {
