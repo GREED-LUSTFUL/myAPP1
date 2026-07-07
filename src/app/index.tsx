@@ -70,6 +70,15 @@ export default function HomeScreen() {
       fontSize: 18,
       fontWeight: "600",
     },
+    letters: {
+      backgroundColor: COLORS.box,
+      paddingVertical: 12,
+      paddingHorizontal: 20,
+      borderRadius: 3,
+      width: 110,
+      marginBottom: 20,
+      margin: "auto",
+    },
   });
 
 
@@ -96,7 +105,9 @@ export default function HomeScreen() {
           <Text style={styles.paperText}> Write a Letter </Text>
         </View>
       </View>
-
+       <Pressable style={styles.letters}>
+        <Text style={styles.letterstext}>LETTERS</Text>
+       </Pressable>
     </View>
   );
 }
