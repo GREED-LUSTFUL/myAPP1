@@ -1,23 +1,26 @@
 import {
+  Image,
+  Modal,
   Pressable,
   StyleSheet,
   Text,
-  View,
-  Modal,
   TextInput,
-  Image,
-  Animated,
+  View
 } from "react-native";
 
-import { useState, useRef } from "react";
-import { useFonts } from "expo-font";
 import {
   Silkscreen_400Regular,
   Silkscreen_700Bold,
 } from "@expo-google-fonts/silkscreen";
+import { useFonts } from "expo-font";
+import { useState } from "react";
 
 export default function HomeScreen() {
-
+   // ON PRESS 
+  const [showLetter, setShowLetter] = useState(false);
+  const [selectedPaper, setSelectedPaper] = useState(null);
+  const [sidebar, setSidebar] = useState("");
+  
   // FONT
   const [fontsLoaded] = useFonts({
     Silkscreen_400Regular,
@@ -27,10 +30,7 @@ export default function HomeScreen() {
     return null;
   }
 
-  // ON PRESS 
-  const [showLetter, setShowLetter] = useState(false);
-  const [selectedPaper, setSelectedPaper] = useState(null);
-  const [sidebar, setSidebar] = useState("");
+  
 
   // STRUCTURE
   return (
