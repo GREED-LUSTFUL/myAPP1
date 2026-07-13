@@ -1,26 +1,123 @@
 import {
   Image,
+  ImageBackground,
   Modal,
   Pressable,
-  StyleSheet,
   Text,
   TextInput,
-  View
+  View,
+  Animated,
 } from "react-native";
 
+
+// STYLES 
+import styles from "./styles";
 import {
   Silkscreen_400Regular,
   Silkscreen_700Bold,
 } from "@expo-google-fonts/silkscreen";
 import { useFonts } from "expo-font";
-import { useState } from "react";
+import { useRef, useState } from "react";
 
 export default function HomeScreen() {
-   // ON PRESS 
+
+
+  // USESTATES
   const [showLetter, setShowLetter] = useState(false);
+  const [title, setTitle] = useState("");
+  const [letter, setLetter] = useState("");
+
   const [selectedPaper, setSelectedPaper] = useState(null);
+  const [selectedEnvelope, setSelectedEnvelope] = useState(null);
+  const [isPacked, setIsPacked] = useState(false);
+
   const [sidebar, setSidebar] = useState("");
-  
+
+  // animation
+  const [paperBehind, setPaperBehind] = useState(false);
+  const fadeAnim = useRef(new Animated.Value(1)).current;
+
+  // bottom buttons 
+  const [readyToSend, setReadyToSend] = useState(false);
+  const [sent, setSent] = useState(false);
+
+
+  // USEREF 
+  const paperY = useRef(new Animated.Value(0)).current;
+  const paperScale = useRef(new Animated.Value(1)).current;
+  const paperHeight = useRef(new Animated.Value(1)).current;
+
+
+  // LETTER PACKING ANIMATION 
+  const packLetter = () => {
+    paperY.setValue(0);
+    paperScale.setValue(1);
+    paperHeight.setValue(1);
+    setIsPacked(false);
+
+    Animated.sequence([
+      Animated.parallel([
+        Animated.timing(paperY, {
+          toValue: -160,
+          duration: 700,
+          useNativeDriver: true,
+        }),
+        Animated.timing(paperScale, {
+          toValue: 0.55,
+          duration: 500,
+          useNativeDriver: true,
+        }),
+        Animated.timing(paperHeight, {
+          toValue: 0.40,
+          duration: 220,
+          useNativeDriver: true,
+        }),
+      ]),
+      Animated.timing(paperY, {
+        toValue: -30,
+        duration: 300,
+        useNativeDriver: true,
+      }),
+    ]).start(() => {
+      setPaperBehind(true);
+      setIsPacked(true);
+    });
+  };
+
+
+  // LETTER UNPACKING ANIMATION 
+  const unpackLetter = () => {
+    setPaperBehind(false);
+    Animated.sequence([
+      Animated.timing(paperY, {
+        toValue: -160,
+        duration: 300,
+        useNativeDriver: true,
+      }),
+      Animated.parallel([
+        Animated.timing(paperHeight, {
+          toValue: 1,
+          duration: 250,
+          useNativeDriver: true,
+        }),
+        Animated.timing(paperScale, {
+          toValue: 1,
+          duration: 250,
+          useNativeDriver: true,
+        }),
+      ]),
+      Animated.timing(paperY, {
+        toValue: 0,
+        duration: 350,
+        useNativeDriver: true,
+      }),
+    ]).start(() => {
+      setSelectedEnvelope(null);
+      setIsPacked(false);
+    });
+  };
+
+
   // FONT
   const [fontsLoaded] = useFonts({
     Silkscreen_400Regular,
@@ -30,7 +127,6 @@ export default function HomeScreen() {
     return null;
   }
 
-  
 
   // STRUCTURE
   return (
@@ -45,9 +141,13 @@ export default function HomeScreen() {
 
           {/*  NAVBAR ICONS  */}
           <View style={styles.navbarRight}>
-            <Pressable onPress={() =>
-              setSidebar(sidebar === "paper" ? "" : "paper")
-            }>
+
+            {/* opens/closes the paper sidebar, disabled once the letter is ready to send  */}
+            <Pressable onPress={() => {
+              if (!readyToSend) {
+                setSidebar(sidebar === "paper" ? "" : "paper");
+              }
+            }}>
               {({ pressed }) => (
                 <Image
                   source={
@@ -55,13 +155,16 @@ export default function HomeScreen() {
                       ? require("../../assets/myAPP1-assets/icons/paper-down.png")
                       : require("../../assets/myAPP1-assets/icons/paper-up.png")
                   }
-                  style={styles.navbarIcon}
-                />
+                  style={styles.navbarIcon}/>
               )}
             </Pressable>
-            <Pressable onPress={() =>
-              setSidebar(sidebar === "envelope" ? "" : "envelope")
-            }>
+
+            {/* opens/closes the envelope sidebar, disabled once the letter is ready to send  */}
+            <Pressable onPress={() => {
+              if (!readyToSend) {
+                setSidebar(sidebar === "envelope" ? "" : "envelope");
+              }
+            }}>
               {({ pressed }) => (
                 <Image
                   source={
@@ -69,12 +172,10 @@ export default function HomeScreen() {
                       ? require("../../assets/myAPP1-assets/icons/envelope-down.png")
                       : require("../../assets/myAPP1-assets/icons/envelope-up.png")
                   }
-                  style={styles.navbarIcon}
-                />
+                  style={styles.navbarIcon}/>
               )}
             </Pressable>
           </View>
-
         </View>
 
 
@@ -87,305 +188,369 @@ export default function HomeScreen() {
 
             <View style={styles.sidebarLine} />
 
+
             {/* SIDEBAR CONTENT  */}
+            {/* papers */}
             {sidebar === "paper" && (
               <>
                 <Pressable
+                  disabled={isPacked} // prevents changing the paper after it has been packed inside an envelope
                   onPress={() =>
                     setSelectedPaper(require("../../assets/myAPP1-assets/pages/paper-1.png"))
                   }>
                   <Image
                     source={require("../../assets/myAPP1-assets/pages/paper-1.png")}
-                    style={styles.sidebarItem}
-                  />
+                    style={styles.sidebarItem}/>
                 </Pressable>
+
                 <Pressable
+                  disabled={isPacked}
                   onPress={() =>
                     setSelectedPaper(require("../../assets/myAPP1-assets/pages/paper-2.png"))
                   }>
                   <Image
                     source={require("../../assets/myAPP1-assets/pages/paper-2.png")}
-                    style={styles.sidebarItem}
-                  />
+                    style={styles.sidebarItem}/>
                 </Pressable>
+
                 <Pressable
+                  disabled={isPacked}
                   onPress={() =>
                     setSelectedPaper(require("../../assets/myAPP1-assets/pages/paper-3.png"))
                   }>
                   <Image
                     source={require("../../assets/myAPP1-assets/pages/paper-3.png")}
-                    style={styles.sidebarItem}
-                  />
+                    style={styles.sidebarItem}/>
                 </Pressable>
+
                 <Pressable
+                  disabled={isPacked}
                   onPress={() =>
                     setSelectedPaper(require("../../assets/myAPP1-assets/pages/paper-4.png"))
                   }>
                   <Image
                     source={require("../../assets/myAPP1-assets/pages/paper-4.png")}
-                    style={styles.sidebarItem}
-                  />
+                    style={styles.sidebarItem}/>
                 </Pressable>
+                
                 <Pressable
+                  disabled={isPacked}
                   onPress={() =>
                     setSelectedPaper(require("../../assets/myAPP1-assets/pages/paper-5.png"))
                   }>
                   <Image
                     source={require("../../assets/myAPP1-assets/pages/paper-5.png")}
-                    style={styles.sidebarItem}
-                  />
+                    style={styles.sidebarItem}/>
                 </Pressable>
               </>
             )}
 
+
+            {/* envelopes  */}
+            {/* selecting an envelope starts the packing animation, clicking the same packed envelope again unpacks the letter */}
             {sidebar === "envelope" && (
               <>
                 <Pressable
-                  onPress={() =>
-                    setSelectedPaper(require("../../assets/myAPP1-assets/envelopes/envelope-1.png"))
-                  }>
+                  onPress={() => {
+                    const envelope = require("../../assets/myAPP1-assets/envelopes/envelope-1.png");
+
+                    // if this envelope is already selected and packed, clicking it again will unpack the letter
+                    if (selectedEnvelope === envelope && isPacked) {
+                      unpackLetter();
+                    }
+
+                    // select the new envelope and play the packing animation
+                    else {
+                      setSelectedEnvelope(envelope);
+                      packLetter();
+                    }
+                  }}>
                   <Image
                     source={require("../../assets/myAPP1-assets/envelopes/envelope-1.png")}
                     style={styles.sidebarItem}
                   />
                 </Pressable>
+
                 <Pressable
-                  onPress={() =>
-                    setSelectedPaper(require("../../assets/myAPP1-assets/envelopes/envelope-2.png"))
-                  }>
+                  onPress={() => {
+                    const envelope = require("../../assets/myAPP1-assets/envelopes/envelope-2.png");
+                    if (selectedEnvelope === envelope && isPacked) {
+                      unpackLetter();
+                    } 
+                    else {
+                      setSelectedEnvelope(envelope);
+                      packLetter();
+                    }
+                  }}>
                   <Image
                     source={require("../../assets/myAPP1-assets/envelopes/envelope-2.png")}
-                    style={styles.sidebarItem}
-                  />
+                    style={styles.sidebarItem}/>
                 </Pressable>
+
                 <Pressable
-                  onPress={() =>
-                    setSelectedPaper(require("../../assets/myAPP1-assets/envelopes/envelope-3.png"))
-                  }>
+                  onPress={() => {
+                    const envelope = require("../../assets/myAPP1-assets/envelopes/envelope-3.png");
+                    if (selectedEnvelope === envelope && isPacked) {
+                      unpackLetter();
+                    }
+                    else {
+                      setSelectedEnvelope(envelope);
+                      packLetter();
+                    }
+                  }}>
                   <Image
                     source={require("../../assets/myAPP1-assets/envelopes/envelope-3.png")}
-                    style={styles.sidebarItem}
-                  />
+                    style={styles.sidebarItem}/>
                 </Pressable>
+
                 <Pressable
-                  onPress={() =>
-                    setSelectedPaper(require("../../assets/myAPP1-assets/envelopes/envelope-4.png"))
-                  }>
+                  onPress={() => {
+                    const envelope = require("../../assets/myAPP1-assets/envelopes/envelope-4.png");
+                    if (selectedEnvelope === envelope && isPacked) {
+                      unpackLetter();
+                    }
+                    else {
+                      setSelectedEnvelope(envelope);
+                      packLetter();
+                    }
+                  }}>
                   <Image
                     source={require("../../assets/myAPP1-assets/envelopes/envelope-4.png")}
-                    style={styles.sidebarItem}
-                  />
+                    style={styles.sidebarItem}/>
                 </Pressable>
+
                 <Pressable
-                  onPress={() =>
-                    setSelectedPaper(require("../../assets/myAPP1-assets/envelopes/envelope-5.png"))
-                  }>
+                  onPress={() => {
+                    const envelope = require("../../assets/myAPP1-assets/envelopes/envelope-5.png");
+                    if (selectedEnvelope === envelope && isPacked) {
+                      unpackLetter();
+                    }
+                    else {
+                      setSelectedEnvelope(envelope);
+                      packLetter();
+                    }
+                  }}>
                   <Image
                     source={require("../../assets/myAPP1-assets/envelopes/envelope-5.png")}
-                    style={styles.sidebarItem}
-                  />
+                    style={styles.sidebarItem}/>
                 </Pressable>
               </>
             )}
-
           </View>
         )}
 
 
-        {/* paper */}
-        <View
+        {/* PAPER  */}
+        <Animated.View
           style={[
-            styles.center, { marginLeft: sidebar ? 120 : 0, },
+            styles.center,
+            {
+              marginLeft: sidebar ? 120 : 0,
+              opacity: fadeAnim,
+            },
           ]}>
 
-          <Pressable>
-            <Image
-              source={
-                selectedPaper
-                  ? selectedPaper
-                  : require("../../assets/myAPP1-assets/pages/vintage-paper.png")
+          {/* opens the writing popup. disabled once the letter is packed or ready to send */}
+          <Pressable
+            disabled={isPacked || readyToSend}
+            onPress={() => {
+              if (!readyToSend) {
+                setShowLetter(true);
               }
-              style={styles.paper}
-              resizeMode="contain"/>
+            }}>
+            {selectedEnvelope && (
+              <Image
+                source={selectedEnvelope}
+                style={[styles.envelope, { zIndex: 1 }]}
+                resizeMode="contain" />
+            )}
 
-            <Text style={styles.paperText}>
-              Write a Letter
-            </Text>
+            {/* animated paper that changes position and size during packing */}
+            <Animated.View
+              style={{
+                zIndex: paperBehind ? 0 : 2,
+
+                // apply all packing animations together
+                transform: [
+                  { translateY: paperY },
+                  { scale: paperScale },
+                  { scaleY: paperHeight },
+                ],
+              }}>
+              <Image
+
+                // use the selected paper or set it to the default paper
+                source={
+                  selectedPaper
+                    ? selectedPaper
+                    : require("../../assets/myAPP1-assets/pages/vintage-paper.png")
+                }
+                style={styles.paper}
+                resizeMode="contain" />
+
+              <View style={styles.paperContent}>
+
+                {/* show the entered title and letter, otherwise display a placeholder message */}
+                {title || letter ? (
+                  <>
+                    <Text
+                      style={styles.paperTitle}
+                      numberOfLines={1}
+                      ellipsizeMode="tail">
+                      {title}
+                    </Text>
+                    <Text
+                      style={styles.paperPreview}
+                      numberOfLines={3}
+                      ellipsizeMode="tail">
+                      {letter}
+                    </Text>
+                  </>
+                ) : (
+                  <Text style={styles.paperText}>
+                    Type here...
+                  </Text>
+                )}
+              </View>
+            </Animated.View>
           </Pressable>
-        </View>
 
+
+          {/* BOTTOM BUTTONS  */}
+          {/* display different buttons depending on the current workflow */}
+          {
+            !readyToSend ? (
+              <Pressable
+                style={styles.prepareButton}
+
+                // lock editing mode and hide the sidebar
+                onPress={() => {
+                  setReadyToSend(true);
+                  setSidebar("");
+                }}>
+                <Text style={styles.prepareText}>
+                  Prepare to Send
+                </Text>
+              </Pressable>
+            ) : (
+              <View style={styles.bottomButtons}>
+
+                <Pressable
+                  style={styles.editButton}
+                  onPress={() => {
+
+                    // return to editing mode
+                    setReadyToSend(false);
+
+                    // automatically unpack the letter so it can be edited again
+                    if (isPacked) {
+                      unpackLetter();
+                    }
+                  }}>
+                  <Text style={styles.editText}>
+                    Edit
+                  </Text>
+                </Pressable>
+
+                <Pressable
+                  style={styles.sendButton}
+                  onPress={() => {
+
+                    // fade out everything before showing the 'sent' text
+                    Animated.timing(fadeAnim, {
+                      toValue: 0,
+                      duration: 600,
+                      useNativeDriver: true,
+                    }).start(() => {
+                      setSent(true);
+
+                      // reset the app display after sending the letter
+                      setTimeout(() => {
+                        setTitle("");
+                        setLetter("");
+                        setSelectedPaper(null);
+                        setSelectedEnvelope(null);
+                        setIsPacked(false);
+                        setReadyToSend(false);
+                        setPaperBehind(false);
+
+                        paperY.setValue(0);
+                        paperScale.setValue(1);
+                        paperHeight.setValue(1);
+                        fadeAnim.setValue(1);
+
+                        setSent(false);
+                      }, 1500);
+                    });
+                  }}>
+                  <Text style={styles.sendText}>
+                    Send
+                  </Text>
+                </Pressable>
+              </View>
+            )
+          }
+        </Animated.View>
+
+        {/* display 'sent' text after the user clicks send button */}
+        {sent && (
+          <View style={styles.sentContainer}>
+            <Text style={styles.sentText}>
+              ✓ SENT
+            </Text>
+          </View>
+        )}
       </View>
 
 
       {/* POPUP */}
+      {/* full-screen letter paper popup */}
       <Modal
         visible={showLetter}
         animationType="slide"
-        transparent={true}>
+        transparent={true} >
 
         <View style={styles.overlay}>
-          <View style={styles.letterPaper}>
+
+          {/* use the selected paper as the popup  */}
+          <ImageBackground
+            source={
+              selectedPaper
+                ? selectedPaper
+                : require("../../assets/myAPP1-assets/pages/vintage-paper.png")
+            }
+            style={styles.letterPaper}
+            resizeMode="contain">
+
+              {/* letter title  */}
             <TextInput
               placeholder="Title"
-              style={styles.titleInput} />
+              placeholderTextColor="#2A1F19"
+              value={title}
+              onChangeText={setTitle}
+              style={styles.titleInput}/>
+
+            {/* letter body  */}
             <TextInput
-              placeholder="Start writing..."
+              placeholder="Type your letter here..."
+              placeholderTextColor="#2A1F19"
               multiline
-              style={styles.input} />
+              value={letter}
+              onChangeText={setLetter}
+              style={styles.input}/>
+
+            {/* save the letter and close the popup  */}
             <Pressable
               style={styles.plusButton}
-              onPress={() => setShowLetter(false)}>
-              <Text style={styles.plus}> × </Text>
+              onPress={() => {
+                setShowLetter(false);
+              }}>
+              <Text style={styles.plus}> ✓ </Text>
             </Pressable>
-          </View>
+
+          </ImageBackground>
         </View>
-
       </Modal>
-
     </>
   );
 }
-
-// STYLES
-const COLORS = {
-  background: "#4A382D",
-  bottomColor: "#2A1F19",
-  mainFont: "#dfd2d2",
-};
-
-const styles = StyleSheet.create({
-
-  container: {
-    flex: 1,
-    backgroundColor: COLORS.background,
-  },
-
-
-  // NAVBAR 
-  navbar: {
-    height: 64,
-    backgroundColor: COLORS.background,
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    padding: 20,
-    borderBottomWidth: 4,
-    borderBottomColor: COLORS.bottomColor,
-  },
-  logoText: {
-    fontFamily: "Silkscreen_700Bold",
-    fontSize: 18,
-    color: COLORS.mainFont,
-  },
-  navbarRight: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 10,
-  },
-  navbarIcon: {
-    width: 48,
-    height: 48,
-    resizeMode: "contain",
-  },
-
-
-  // SIDEBAR 
-  sidebar: {
-    position: "absolute",
-    top: 64,
-    width: 120,
-    height: "100%",
-    bottom: 30,
-    zIndex: 100,
-    elevation: 100,
-    backgroundColor: COLORS.background,
-    borderRightWidth: 4,
-    borderBottomWidth: 4,
-    borderRightColor: COLORS.bottomColor,
-    borderBottomColor: COLORS.bottomColor,
-    padding: 10,
-  },
-  sidebarTitle: {
-    fontFamily: "Silkscreen_700Bold",
-    fontSize: 12,
-    color: COLORS.mainFont,
-  },
-  sidebarLine: {
-    height: 2,
-    backgroundColor: COLORS.bottomColor,
-    marginVertical: 20,
-  },
-  sidebarItem: {
-    width: 70,
-    height: 70,
-    resizeMode: "contain",
-    alignSelf: "center",
-    marginBottom: 10,
-  },
-
-
-  // MAIN 
-  center: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-  },
-
-  paper: {
-    width: 220,
-    height: 340,
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  selectedPaper: {
-    width: 260,
-    height: 340,
-  },
-  plusButton: {
-    width: 60,
-    height: 60,
-    borderRadius: 30,
-    backgroundColor: "#9d8077",
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  plus: {
-    fontSize: 34,
-    color: COLORS.mainFont,
-    fontWeight: "bold",
-  },
-  paperText: {
-    marginTop: 20,
-    fontSize: 18,
-    fontWeight: "600",
-    fontFamily: "Silkscreen_700Bold",
-  },
-
-  overlay: {
-    flex: 1,
-    backgroundColor: "rgba(0,0,0,0.6)",
-    justifyContent: "center",
-    alignItems: "center",
-  },
-
-  letterPaper: {
-    width: 300,
-    height: 500,
-    backgroundColor: COLORS.mainFont,
-    borderRadius: 8,
-    padding: 20,
-  },
-  titleInput: {
-    fontSize: 24,
-    fontWeight: "bold",
-    marginBottom: 20,
-    borderBottomWidth: 1,
-    paddingBottom: 10,
-  },
-  input: {
-    flex: 1,
-    textAlignVertical: "top",
-    fontSize: 18,
-  },
-});
-// shreya
